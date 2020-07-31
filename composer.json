@@ -1,0 +1,20 @@
+{
+  "name": "aivec/wcex-cptm-client",
+  "description": "Client side library for the commercial plugin/theme manager server plugin",
+  "type": "library",
+  "license": "GPL-2.0-only",
+  "require": {
+    "yahnis-elsts/plugin-update-checker": "^4.9"
+  },
+  "authors": [
+    {
+      "name": "Evan Shaw",
+      "email": "evandanielshaw@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Aivec\\Welcart\\CptmClient\\": "src"
+    }
+  }
+}
