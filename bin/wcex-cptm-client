@@ -1,0 +1,59 @@
+#!/usr/bin/env php
+<?php
+use Garden\Cli\Cli;
+use GuzzleHttp\Client;
+use Firebase\JWT\JWT;
+
+require_once 'vendor/autoload.php';
+
+// Define a cli with commands.
+$cli = Cli::create()
+    ->command('deploy')
+    ->description('Deploy a plugin/theme ZIP archive to a server running the wcex-commercial-pt-manager plugin.')
+    ->opt('archive:a', 'The ZIP filename excluding the extension. Note that a file with the given name is searched for in the calling directory. Default: <name of calling directory>', false, 'string')
+    ->opt('url:u', 'The base URI of the server hosting the wcex-commercial-pt-manager plugin.', true, 'string')
+    ->opt('endpoint:e', 'The deployment API endpoint. One of "updateServer" or "dlseller".', true, 'string')
+    ->opt('productId:pid', 'The unique ID for the commercial plugin/theme', true, 'string')
+    ->arg('privateKey', 'Private key for JWT encoding of request payload', true);
+
+// Parse and return cli args.
+$args = $cli->parse($argv, true);
+
+switch ($argv[1]) {
+    case 'deploy':
+        $archive = $args->getOpt('archive', dirname(getcwd())) . '.zip';
+        $uri = $args->getOpt('url');
+        $endpoint = $args->getOpt('endpoint');
+        $productId = $args->getOpt('productId');
+        $privateKey = trim($args->getArg('privateKey'), "\"");
+
+        if ($endpoint !== 'updateServer' && $endpoint !== 'dlseller') {
+            echo "\r\n";
+            echo 'ERROR: "endpoint" must be one of "updateServer" or "dlseller".';
+            echo "\r\n";
+            exit(1);
+        }
+
+        $archivec = file_get_contents($archive);
+        if ($archivec === false) {
+            echo "\r\n";
+            echo 'ERROR: cannot get archive contents.';
+            echo "\r\n";
+            exit(1);
+        }
+        $response = (new Client())->post(
+            trim($uri, '/') . '/wcexcptm/deploy/' . $endpoint . '/' . $productId,
+            [
+                'form_params' => [
+                    'payload' => json_encode(['jwt' => JWT::encode(['zipFileBase64' => base64_encode($archivec)], $privateKey, 'RS256')])
+                ]
+            ]
+        );
+        if (trim($response->getBody(), "\"") !== 'success') {
+            echo "\r\n";
+            echo 'ERROR: ' . $response->getBody();
+            echo "\r\n";
+            exit(1);
+        }
+        break;
+}
