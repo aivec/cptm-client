@@ -6,11 +6,6 @@
   "require": {
     "yahnis-elsts/plugin-update-checker": "^4.9"
   },
-  "require-dev": {
-    "guzzlehttp/guzzle": "^7.0",
-    "vanilla/garden-cli": "^2.2",
-    "firebase/php-jwt": "^5.2"
-  },
   "authors": [
     {
       "name": "Evan Shaw",
@@ -21,8 +16,5 @@
     "psr-4": {
       "Aivec\\Welcart\\CptmClient\\": "src"
     }
-  },
-  "bin": [
-    "bin/wcex-cptm-client"
-  ]
+  }
 }
