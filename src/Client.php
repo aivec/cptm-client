@@ -106,9 +106,7 @@ class Client {
                 ],
                 $url . '/wp-update-server/'
             ),
-            $this->pt_file,
-            '',
-            1
+            $this->pt_file
         );
     }
 
