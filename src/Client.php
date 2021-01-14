@@ -1,11 +1,12 @@
 <?php
+
 namespace Aivec\Welcart\CptmClient;
 
 /**
  * WCEX Commercial Plugins/Themes Manager client
  */
-class Client {
-
+class Client
+{
     /**
      * Absolute path to the plugin/theme entry file
      *
@@ -85,11 +86,15 @@ class Client {
 
         $server_info = null;
         if ($wpdb->use_mysqli) {
+            // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysqli_get_server_info
             $server_info = mysqli_get_server_info($wpdb->dbh);
         } else {
+            // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysql_get_server_info
+            // phpcs:disable PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
             $server_info = mysql_get_server_info($wpdb->dbh);
         }
-        
+        // phpcs:enable
+
         \Puc_v4_Factory::buildUpdateChecker(
             add_query_arg(
                 [
@@ -130,7 +135,7 @@ class Client {
             $url = esc_url_raw(wp_unslash($_SERVER[$source]));
             $scheme = wp_parse_url($url, PHP_URL_SCHEME);
             if (!$scheme) {
-                $url = 'http://'.$url;
+                $url = 'http://' . $url;
             }
             $host = wp_parse_url($url, PHP_URL_HOST);
         }

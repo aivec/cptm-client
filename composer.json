@@ -12,9 +12,16 @@
       "email": "evandanielshaw@gmail.com"
     }
   ],
+  "scripts": {
+    "lint": "phpcs -ps --standard=AivecWP-5 --extensions=php src",
+    "lint:fix": "phpcbf -ps --standard=AivecWP-5 --extensions=php src"
+  },
   "autoload": {
     "psr-4": {
       "Aivec\\Welcart\\CptmClient\\": "src"
     }
+  },
+  "require-dev": {
+    "aivec/phpcs-wp": "^2.0"
   }
 }
