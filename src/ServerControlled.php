@@ -4,6 +4,7 @@ namespace Aivec\CptmClient;
 
 use Aivec\CptmClient\Models\Provider;
 use Aivec\CptmClient\Models\ProviderEndpoint;
+use Aivec\Plugins\EnvironmentSwitcher;
 
 /**
  * Consumes list of providers **from an API server**
@@ -11,6 +12,7 @@ use Aivec\CptmClient\Models\ProviderEndpoint;
 class ServerControlled extends Client
 {
     const PROVIDERS_KEY_PREFIX = 'cptmc_providers_';
+    const PROVIDERS_URL_OVERRIDE_PREFIX = 'cptmc_providers_url_override_';
 
     /**
      * URL that returns a list of providers as a JSON string
@@ -107,7 +109,22 @@ class ServerControlled extends Client
      * @return bool
      */
     public function updateProvidersList() {
-        $response = wp_remote_get($this->providersEndpoint);
+        $endpoint = $this->providersEndpoint;
+        $env = EnvironmentSwitcher\Utils::getEnv();
+        if ($env === 'development') {
+            $url = get_option(self::PROVIDERS_URL_OVERRIDE_PREFIX . $this->itemUniqueId, null);
+            if (is_string($url) && !empty($url)) {
+                $endpoint = $url;
+            }
+
+            // environment variable takes precedence over DB override option
+            $url = isset($_ENV['CPTM_CLIENT_PROVIDERS_URL']) ? (string)$_ENV['CPTM_CLIENT_PROVIDERS_URL'] : '';
+            if (is_string($url) && !empty($url)) {
+                $endpoint = $url;
+            }
+        }
+
+        $response = wp_remote_get($endpoint);
         if (is_wp_error($response)) {
             // whoops...
             return false;
@@ -128,6 +145,17 @@ class ServerControlled extends Client
 
         update_option(self::PROVIDERS_KEY_PREFIX . $this->itemUniqueId, $providers);
         return true;
+    }
+
+    /**
+     * Sets providers override URL for testing purposes
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @param string $url
+     * @return void
+     */
+    public function setProvidersUrlOverride($url) {
+        update_option(self::PROVIDERS_URL_OVERRIDE_PREFIX . $this->itemUniqueId, $url);
     }
 
     /**

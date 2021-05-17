@@ -13,7 +13,7 @@ use RuntimeException;
 abstract class Client
 {
     const SELECTED_PROVIDER_KEY_PREFIX = 'cptmc_selected_provider_';
-    const DEV_URL_OVERRIDE_KEY_PREFIX = 'cptmc_dev_url_override_';
+    const UPDATE_URL_OVERRIDE_KEY_PREFIX = 'cptmc_update_url_override_';
 
     /**
      * Absolute path to the plugin file or theme directory
@@ -68,7 +68,7 @@ abstract class Client
             return;
         }
 
-        $env = EnvironmentSwitcher\Options::getOptions()['env'];
+        $env = EnvironmentSwitcher\Utils::getEnv();
         if ($env === 'development') {
             // environment variable takes precedence over DB dev override URL option
             $url = isset($_ENV['CPTM_CLIENT_UPDATE_URL']) ? (string)$_ENV['CPTM_CLIENT_UPDATE_URL'] : '';
@@ -77,7 +77,7 @@ abstract class Client
                 return;
             }
 
-            $url = get_option(self::DEV_URL_OVERRIDE_KEY_PREFIX, null);
+            $url = get_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, null);
             if (is_string($url) && !empty($url)) {
                 $this->buildUpdateChecker($url);
                 return;
@@ -99,6 +99,17 @@ abstract class Client
         }
 
         $this->buildUpdateChecker($provider->getProductionEndpoint()->getApiUrl());
+    }
+
+    /**
+     * Sets update override URL for testing purposes
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @param string $url
+     * @return void
+     */
+    public function setUpdateUrlOverride($url) {
+        update_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, $url);
     }
 
     /**
@@ -152,7 +163,7 @@ abstract class Client
      * @return ProviderEndpoint
      */
     public function getProviderEndpoint(Provider $provider) {
-        $env = EnvironmentSwitcher\Options::getOptions()['env'];
+        $env = EnvironmentSwitcher\Utils::getEnv();
         if ($env === 'development') {
             // environment variable takes precedence over DB dev override URL option
             $url = isset($_ENV['CPTM_CLIENT_UPDATE_URL']) ? (string)$_ENV['CPTM_CLIENT_UPDATE_URL'] : '';
@@ -160,7 +171,7 @@ abstract class Client
                 return new ProviderEndpoint($url, $url);
             }
 
-            $url = get_option(self::DEV_URL_OVERRIDE_KEY_PREFIX, null);
+            $url = get_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, null);
             if (is_string($url) && !empty($url)) {
                 return new ProviderEndpoint($url, $url);
             }
