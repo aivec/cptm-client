@@ -4,8 +4,46 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a52eeb8274c0bf0b653e1741026ca1ca",
+    "content-hash": "2c6522da9dbd0461d860eb8932af6d92",
     "packages": [
+        {
+            "name": "aivec/environment-switcher",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aivec/environment-switcher.git",
+                "reference": "7086b39320152287febd457029fef5d76893245a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/aivec/environment-switcher/zipball/7086b39320152287febd457029fef5d76893245a",
+                "reference": "7086b39320152287febd457029fef5d76893245a",
+                "shasum": ""
+            },
+            "require-dev": {
+                "aivec/phpcs-wp": "^2.0",
+                "wp-cli/i18n-command": "^2.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Aivec\\Plugins\\EnvironmentSwitcher\\": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Evan Shaw",
+                    "email": "evandanielshaw@gmail.com"
+                }
+            ],
+            "description": "Switch between development, staging, and production environments for integration testing.",
+            "support": {
+                "issues": "https://github.com/aivec/environment-switcher/issues",
+                "source": "https://github.com/aivec/environment-switcher/tree/v1.0.0"
+            },
+            "time": "2021-05-13T08:27:28+00:00"
+        },
         {
             "name": "yahnis-elsts/plugin-update-checker",
             "version": "v4.10",
