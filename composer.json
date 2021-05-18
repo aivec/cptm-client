@@ -19,10 +19,16 @@
     "aivec/environment-switcher": "^1.0"
   },
   "require-dev": {
-    "aivec/phpcs-wp": "^2.0"
+    "aivec/phpcs-wp": "^2.0",
+    "wp-cli/i18n-command": "^2.2"
   },
   "scripts": {
     "lint": "phpcs -ps --standard=AivecWP-5 src",
-    "lint:fix": "phpcbf -ps --standard=AivecWP-5 src"
+    "lint:fix": "phpcbf -ps --standard=AivecWP-5 src",
+    "i18n:update-pos": [
+      "wp i18n make-pot --domain=cptmc . src/languages/messages.pot",
+      "find ./src/languages -name \"*.po\" | xargs -I % msgmerge -o % % src/languages/messages.pot"
+    ],
+    "i18n:make-mo": "wp i18n make-mo src/languages"
   }
 }

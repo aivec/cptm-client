@@ -24,16 +24,27 @@ class ProviderEndpoint implements JsonSerializable
     private $apiurl;
 
     /**
+     * Optional
+     *
+     * Defaults to the value of `$siteurl`
+     *
+     * @var string
+     */
+    private $displaytext;
+
+    /**
      * Sets endpoint data for a provider
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @param string $siteurl
      * @param string $apiurl
+     * @param string $displaytext Optional. Defaults to the value of `$siteurl`
      * @return void
      */
-    public function __construct($siteurl, $apiurl) {
+    public function __construct($siteurl, $apiurl, $displaytext = '') {
         $this->siteurl = $siteurl;
         $this->apiurl = $apiurl;
+        $this->displaytext = !empty($displaytext) ? $displaytext : $siteurl;
     }
 
     /**
@@ -46,6 +57,7 @@ class ProviderEndpoint implements JsonSerializable
         return [
             'siteurl' => $this->siteurl,
             'apiurl' => $this->apiurl,
+            'displaytext' => $this->displaytext,
         ];
     }
 
@@ -67,5 +79,15 @@ class ProviderEndpoint implements JsonSerializable
      */
     public function getApiUrl() {
         return $this->apiurl;
+    }
+
+    /**
+     * Getter for `$displaytext`
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return string
+     */
+    public function getDisplayText() {
+        return $this->displaytext;
     }
 }

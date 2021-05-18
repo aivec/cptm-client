@@ -46,16 +46,19 @@ class Provider implements JsonSerializable
      * @param string                $identifier
      * @param ProviderEndpoint      $productionEndpoint
      * @param ProviderEndpoint|null $stagingEndpoint
+     * @param bool                  $enabled
      * @return void
      */
     public function __construct(
         $identifier,
         ProviderEndpoint $productionEndpoint,
-        ProviderEndpoint $stagingEndpoint = null
+        ProviderEndpoint $stagingEndpoint = null,
+        $enabled = true
     ) {
         $this->identifier = $identifier;
         $this->productionEndpoint = $productionEndpoint;
         $this->stagingEndpoint = $stagingEndpoint;
+        $this->enabled = $enabled;
     }
 
     /**
@@ -79,6 +82,7 @@ class Provider implements JsonSerializable
             'identifier' => $this->identifier,
             'productionEndpoint' => $this->productionEndpoint,
             'stagingEndpoint' => $this->stagingEndpoint,
+            'enabled' => $this->enabled,
         ];
     }
 

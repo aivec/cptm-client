@@ -1,0 +1,38 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2021-05-18T16:56:19+09:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.4.0\n"
+"X-Domain: cptmc\n"
+
+#: src/Views/SettingsPage.php:106
+msgid "Settings"
+msgstr ""
+
+#: src/Views/SettingsPage.php:134
+msgid "Please choose your provider"
+msgstr ""
+
+#: src/Views/SettingsPage.php:140
+msgid "No providers available"
+msgstr ""
+
+#: src/Views/SettingsPage.php:185
+msgid "Testing Providers URL"
+msgstr ""
+
+#: src/Views/SettingsPage.php:198
+#: src/Views/SettingsPage.php:233
+msgid "This field only applies to a testing environment"
+msgstr ""
+
+#: src/Views/SettingsPage.php:220
+msgid "Testing Update URL"
+msgstr ""

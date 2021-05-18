@@ -37,6 +37,20 @@ abstract class Client
     protected $itemVersion;
 
     /**
+     * Selected provider option name
+     *
+     * @var string
+     */
+    public $selectedProviderOptName;
+
+    /**
+     * Update URL override option name
+     *
+     * @var string
+     */
+    public $updateUrlOverrideOptName;
+
+    /**
      * Set plugin/theme information for updates
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
@@ -50,6 +64,15 @@ abstract class Client
         $this->itemUniqueId = $itemUniqueId;
         $this->itemVersion = $itemVersion;
         $this->ptpath = $ptpath;
+        $this->selectedProviderOptName = self::SELECTED_PROVIDER_KEY_PREFIX . $this->itemUniqueId;
+        $this->updateUrlOverrideOptName = self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId;
+
+        $mopath = __DIR__ . '/languages/cptmc-' . get_locale() . '.mo';
+        if (file_exists($mopath)) {
+            load_textdomain('cptmc', $mopath);
+        } else {
+            load_textdomain('cptmc', __DIR__ . '/languages/cptmc-en.mo');
+        }
     }
 
     /**
@@ -60,7 +83,21 @@ abstract class Client
      * @return void
      */
     public function init($endpointOverride = null) {
+        $provider = $this->getSelectedProvider();
+        if ($provider === null) {
+            // selecting a provider is required to build the update checker otherwise we don't know
+            // where to send the request...
+            return;
+        }
+
+        // handle display of errors returned by the update checker even if updates are being handled
+        // outside of this plugin/theme
         add_action('wp_error_added', [$this, 'setUpdateApiErrorResponse'], 10, 4);
+
+        if (!$provider->isEnabled()) {
+            // the provider isn't enabled. Abort
+            return;
+        }
 
         // endpoint override param is given highest precedence
         if (!empty($endpointOverride)) {
@@ -70,24 +107,18 @@ abstract class Client
 
         $env = EnvironmentSwitcher\Utils::getEnv();
         if ($env === 'development') {
-            // environment variable takes precedence over DB dev override URL option
+            // DB variable takes precedence over environment variable
+            $url = get_option($this->updateUrlOverrideOptName, null);
+            if (is_string($url) && !empty($url)) {
+                $this->buildUpdateChecker($url);
+                return;
+            }
+
             $url = isset($_ENV['CPTM_CLIENT_UPDATE_URL']) ? (string)$_ENV['CPTM_CLIENT_UPDATE_URL'] : '';
             if (!empty($url)) {
                 $this->buildUpdateChecker($url);
                 return;
             }
-
-            $url = get_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, null);
-            if (is_string($url) && !empty($url)) {
-                $this->buildUpdateChecker($url);
-                return;
-            }
-        }
-
-        $provider = $this->getSelectedProvider();
-        if ($provider === null) {
-            // if in a staging or production environment, selecting a provider is required
-            return;
         }
 
         if ($env === 'staging') {
@@ -102,6 +133,26 @@ abstract class Client
     }
 
     /**
+     * Sets selected provider option
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @param string $selected
+     * @return void
+     */
+    public function setSelectedProvider($selected) {
+        $providers = $this->getProviders();
+        if (!is_array($providers)) {
+            return;
+        }
+        foreach ($providers as $provider) {
+            if ($selected === $provider->getIdentifier()) {
+                update_option($this->selectedProviderOptName, $selected);
+                return;
+            }
+        }
+    }
+
+    /**
      * Sets update override URL for testing purposes
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
@@ -109,7 +160,27 @@ abstract class Client
      * @return void
      */
     public function setUpdateUrlOverride($url) {
-        update_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, $url);
+        update_option($this->updateUrlOverrideOptName, $url);
+    }
+
+    /**
+     * Updates option values if they are set in `$_POST`.
+     *
+     * This method can be used in custom option update handling if not using any of
+     * the default forms/pages that this library provides under `Aivec\CptmClient\Views\*`
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return void
+     */
+    public function updateOptionsWithPost() {
+        if (isset($_POST[$this->selectedProviderOptName])) {
+            $selected = (string)$_POST[$this->selectedProviderOptName];
+            $this->setSelectedProvider($selected);
+        }
+        if (isset($_POST[$this->updateUrlOverrideOptName])) {
+            $url = (string)$_POST[$this->updateUrlOverrideOptName];
+            $this->setUpdateUrlOverride($url);
+        }
     }
 
     /**
@@ -165,15 +236,17 @@ abstract class Client
     public function getProviderEndpoint(Provider $provider) {
         $env = EnvironmentSwitcher\Utils::getEnv();
         if ($env === 'development') {
-            // environment variable takes precedence over DB dev override URL option
-            $url = isset($_ENV['CPTM_CLIENT_UPDATE_URL']) ? (string)$_ENV['CPTM_CLIENT_UPDATE_URL'] : '';
-            if (!empty($url)) {
-                return new ProviderEndpoint($url, $url);
+            $ident = $provider->getIdentifier();
+
+            // DB variable takes precedence over environment variable
+            $url = get_option($this->updateUrlOverrideOptName, null);
+            if (is_string($url) && !empty($url)) {
+                return new ProviderEndpoint($url, $url, "{$url} ({$ident})");
             }
 
-            $url = get_option(self::UPDATE_URL_OVERRIDE_KEY_PREFIX . $this->itemUniqueId, null);
-            if (is_string($url) && !empty($url)) {
-                return new ProviderEndpoint($url, $url);
+            $url = isset($_ENV['CPTM_CLIENT_UPDATE_URL']) ? (string)$_ENV['CPTM_CLIENT_UPDATE_URL'] : '';
+            if (!empty($url)) {
+                return new ProviderEndpoint($url, $url, "{$url} ({$ident})");
             }
         }
 
@@ -185,29 +258,6 @@ abstract class Client
         }
 
         return $provider->getProductionEndpoint();
-    }
-
-    /**
-     * Updates the selected provider if it is set in `$_POST`
-     * and the provider exists
-     *
-     * @author Evan D Shaw <evandanielshaw@gmail.com>
-     * @return void
-     */
-    public function updateSelectedProviderIfSet() {
-        if (!empty($_POST['cptmc_set_provider'][$this->itemUniqueId])) {
-            $selected = (string)$_POST['cptmc_set_provider'][$this->itemUniqueId];
-            $providers = $this->getProviders();
-            if (!is_array($providers)) {
-                return;
-            }
-            foreach ($providers as $provider) {
-                if ($selected === $provider->getIdentifier()) {
-                    update_option(self::SELECTED_PROVIDER_KEY_PREFIX . $this->itemUniqueId, $selected);
-                    return;
-                }
-            }
-        }
     }
 
     /**
@@ -228,7 +278,7 @@ abstract class Client
                     ],
                     $this->getAnalyticsData()
                 ),
-                $url . '/wp-update-server/'
+                $url
             ),
             $this->ptpath
         );
@@ -309,14 +359,14 @@ abstract class Client
             return null;
         }
 
-        $ssi = get_option(self::SELECTED_PROVIDER_KEY_PREFIX . $this->itemUniqueId, null);
+        $spi = get_option($this->selectedProviderOptName, null);
         if (count($providers) === 1) {
             // no provider has been previously selected, return first index
-            if ($ssi === null) {
+            if ($spi === null) {
                 return $providers[0];
             }
             // the selected provider is the same as the only available provider, return first index
-            if ($providers[0]->getIdentifier() === $ssi) {
+            if ($providers[0]->getIdentifier() === $spi) {
                 return $providers[0];
             }
             // a different provider that is no longer available was previously selected, return `null`
@@ -324,12 +374,12 @@ abstract class Client
         }
 
         // more than one provider exists and no provider has been selected, return `null`
-        if (empty($ssi)) {
+        if (empty($spi)) {
             return null;
         }
 
         foreach ($providers as $s) {
-            if ($s->getIdentifier() === $ssi) {
+            if ($s->getIdentifier() === $spi) {
                 return $s;
             }
         }

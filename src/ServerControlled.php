@@ -29,6 +29,20 @@ class ServerControlled extends Client
     public $updateProvidersListEvent;
 
     /**
+     * Providers option name
+     *
+     * @var string
+     */
+    public $providersOptName;
+
+    /**
+     * Providers URL override option name
+     *
+     * @var string
+     */
+    public $providersUrlOverrideOptName;
+
+    /**
      * Set plugin/theme information for updates
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
@@ -42,20 +56,8 @@ class ServerControlled extends Client
         parent::__construct($itemUniqueId, $itemVersion, $ptpath);
         $this->providersEndpoint = $providersEndpoint;
         $this->updateProvidersListEvent = 'cptmc_update_providers_' . $this->itemUniqueId;
-    }
-
-    /**
-     * Returns list of providers fetched from API
-     *
-     * @author Evan D Shaw <evandanielshaw@gmail.com>
-     * @return Provider[]|null
-     */
-    public function getProviders() {
-        $sopt = get_option(self::PROVIDERS_KEY_PREFIX . $this->itemUniqueId, null);
-        if (!is_array($sopt)) {
-            return null;
-        }
-        return self::buildProvidersFromArray($sopt);
+        $this->providersOptName = self::PROVIDERS_KEY_PREFIX . $this->itemUniqueId;
+        $this->providersUrlOverrideOptName = self::PROVIDERS_URL_OVERRIDE_PREFIX . $this->itemUniqueId;
     }
 
     /**
@@ -71,8 +73,13 @@ class ServerControlled extends Client
      * @return void
      */
     public function init($endpointOverride = null) {
+        add_action('update_option_' . EnvironmentSwitcher\Utils::OPTION_KEY, function () {
+            // clear providers when working environment is updated
+            delete_option($this->providersOptName);
+        });
         $providers = $this->getProviders();
         if ($providers === null) {
+            // update the providers list if it doesn't exist already.
             $this->updateProvidersList();
         }
 
@@ -90,6 +97,20 @@ class ServerControlled extends Client
         register_deactivation_hook($this->ptpath, [$this, 'clearCron']);
 
         parent::init($endpointOverride);
+    }
+
+    /**
+     * Returns list of providers fetched from API
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return Provider[]|null
+     */
+    public function getProviders() {
+        $sopt = get_option($this->providersOptName, null);
+        if (!is_array($sopt)) {
+            return null;
+        }
+        return self::buildProvidersFromArray($sopt);
     }
 
     /**
@@ -112,13 +133,13 @@ class ServerControlled extends Client
         $endpoint = $this->providersEndpoint;
         $env = EnvironmentSwitcher\Utils::getEnv();
         if ($env === 'development') {
-            $url = get_option(self::PROVIDERS_URL_OVERRIDE_PREFIX . $this->itemUniqueId, null);
+            $url = isset($_ENV['CPTM_CLIENT_PROVIDERS_URL']) ? (string)$_ENV['CPTM_CLIENT_PROVIDERS_URL'] : '';
             if (is_string($url) && !empty($url)) {
                 $endpoint = $url;
             }
 
-            // environment variable takes precedence over DB override option
-            $url = isset($_ENV['CPTM_CLIENT_PROVIDERS_URL']) ? (string)$_ENV['CPTM_CLIENT_PROVIDERS_URL'] : '';
+            // DB variable takes precedence over environment variable
+            $url = get_option($this->providersUrlOverrideOptName, null);
             if (is_string($url) && !empty($url)) {
                 $endpoint = $url;
             }
@@ -143,7 +164,7 @@ class ServerControlled extends Client
             return false;
         }
 
-        update_option(self::PROVIDERS_KEY_PREFIX . $this->itemUniqueId, $providers);
+        update_option($this->providersOptName, $providers);
         return true;
     }
 
@@ -155,7 +176,22 @@ class ServerControlled extends Client
      * @return void
      */
     public function setProvidersUrlOverride($url) {
-        update_option(self::PROVIDERS_URL_OVERRIDE_PREFIX . $this->itemUniqueId, $url);
+        update_option($this->providersUrlOverrideOptName, $url);
+    }
+
+    /**
+     * Updates option values if they are set in `$_POST`.
+     *
+     * @see Client::updateOptionsWithPost()
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return void
+     */
+    public function updateOptionsWithPost() {
+        parent::updateOptionsWithPost();
+        if (isset($_POST[$this->providersUrlOverrideOptName])) {
+            $url = (string)$_POST[$this->providersUrlOverrideOptName];
+            $this->setProvidersUrlOverride($url);
+        }
     }
 
     /**
@@ -180,8 +216,9 @@ class ServerControlled extends Client
                             $staging = new ProviderEndpoint($stagingEndpoint['siteurl'], $stagingEndpoint['apiurl']);
                         }
                     }
+                    $enabled = isset($provider['enabled']) ? (bool)$provider['enabled'] : true;
 
-                    $s[] = new Provider($identifier, $prod, $staging);
+                    $s[] = new Provider($identifier, $prod, $staging, $enabled);
                 }
             }
         }
