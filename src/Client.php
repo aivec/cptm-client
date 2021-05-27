@@ -121,15 +121,20 @@ abstract class Client
             }
         }
 
+        $url = '';
         if ($env === 'staging') {
             $pendpoint = $provider->getStagingEndpoint();
             if ($pendpoint !== null) {
-                $this->buildUpdateChecker($pendpoint->getApiUrl());
-                return;
+                $url = $pendpoint->getApiUrl();
             }
         }
 
-        $this->buildUpdateChecker($provider->getProductionEndpoint()->getApiUrl());
+        if (empty($url)) {
+            $url = $provider->getProductionEndpoint()->getApiUrl();
+        }
+
+        $url = apply_filters("cptmc_filter_update_checker_url_{$this->itemUniqueId}", $url, $provider, $env, $this);
+        $this->buildUpdateChecker($url);
     }
 
     /**
@@ -222,7 +227,18 @@ abstract class Client
             if (!isset($wperror->errors['http_404'][0])) {
                 return;
             }
-            $wperror->errors['http_404'][0] = $json['error']['message'];
+            $emessage = $json['error']['message'];
+            $emessage = apply_filters(
+                "cptmc_filter_update_error_message_{$this->itemUniqueId}",
+                $emessage,
+                $json,
+                $this,
+                $code,
+                $message,
+                $data,
+                $wperror
+            );
+            $wperror->errors['http_404'][0] = $emessage;
         }
     }
 
@@ -325,7 +341,7 @@ abstract class Client
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return string
      */
-    protected function getHost() {
+    public function getHost() {
         $possible_host_sources = ['HTTP_X_FORWARDED_HOST', 'HTTP_HOST', 'SERVER_NAME'];
         $host = '';
         foreach ($possible_host_sources as $source) {
