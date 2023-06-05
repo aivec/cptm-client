@@ -77,7 +77,7 @@ class Provider implements JsonSerializable
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return array
      */
-    public function jsonSerialize() {
+    public function jsonSerialize(): array {
         return [
             'identifier' => $this->identifier,
             'productionEndpoint' => $this->productionEndpoint,

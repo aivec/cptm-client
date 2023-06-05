@@ -53,7 +53,7 @@ class ProviderEndpoint implements JsonSerializable
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return array
      */
-    public function jsonSerialize() {
+    public function jsonSerialize(): array {
         return [
             'siteurl' => $this->siteurl,
             'apiurl' => $this->apiurl,
