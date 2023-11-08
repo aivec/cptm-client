@@ -312,14 +312,14 @@ abstract class Client
         global $wp_version, $wpdb;
 
         $server_info = null;
-        if ($wpdb->use_mysqli) {
+        // if ($wpdb->use_mysqli) {
             // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysqli_get_server_info
             $server_info = mysqli_get_server_info($wpdb->dbh);
-        } else {
+        // } else {
             // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysql_get_server_info
             // phpcs:disable PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-            $server_info = mysql_get_server_info($wpdb->dbh);
-        }
+        //     $server_info = mysql_get_server_info($wpdb->dbh);
+        // }
         // phpcs:enable
 
         return [
