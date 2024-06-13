@@ -199,6 +199,9 @@ abstract class Client
      * @return void
      */
     public function setUpdateApiErrorResponse($code, $message, $data, $wperror) {
+        if (is_object($data)) {
+            $data = (array) $data;
+        }
         $body = isset($data['body']) ? (string)$data['body'] : '';
         if (empty($body)) {
             return;
