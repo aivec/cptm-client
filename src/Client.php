@@ -325,10 +325,14 @@ abstract class Client
         // }
         // phpcs:enable
 
+        $welcart_version = null;
+        if (defined('USCES_VERSION')) {
+            $welcart_version = USCES_VERSION;
+        }
         return [
             'domain' => $this->getHost(),
             'productVersion' => $this->itemVersion,
-            'welcartVersion' => USCES_VERSION,
+            'welcartVersion' => $welcart_version,
             'wordpressVersion' => $wp_version,
             'phpVersion' => phpversion(),
             'webServer' => isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '',
