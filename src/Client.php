@@ -179,11 +179,11 @@ abstract class Client
      */
     public function updateOptionsWithPost() {
         if (isset($_POST[$this->selectedProviderOptName])) {
-            $selected = (string)$_POST[$this->selectedProviderOptName];
+            $selected = sanitize_text_field(wp_unslash($_POST[$this->selectedProviderOptName]));
             $this->setSelectedProvider($selected);
         }
         if (isset($_POST[$this->updateUrlOverrideOptName])) {
-            $url = (string)$_POST[$this->updateUrlOverrideOptName];
+            $url = esc_url_raw(wp_unslash($_POST[$this->updateUrlOverrideOptName]));
             $this->setUpdateUrlOverride($url);
         }
     }
@@ -315,15 +315,11 @@ abstract class Client
         global $wp_version, $wpdb;
 
         $server_info = null;
-        // if ($wpdb->use_mysqli) {
+        if ($wpdb->dbh instanceof \mysqli) {
             // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysqli_get_server_info
             $server_info = mysqli_get_server_info($wpdb->dbh);
-        // } else {
-            // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysql_get_server_info
-            // phpcs:disable PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        //     $server_info = mysql_get_server_info($wpdb->dbh);
-        // }
-        // phpcs:enable
+            // phpcs:enable
+        }
 
         $welcart_version = null;
         if (defined('USCES_VERSION')) {
@@ -335,7 +331,7 @@ abstract class Client
             'welcartVersion' => $welcart_version,
             'wordpressVersion' => $wp_version,
             'phpVersion' => phpversion(),
-            'webServer' => isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '',
+            'webServer' => isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '',
             'databaseInfo' => $server_info,
             'databaseVersion' => $wpdb->db_version(),
         ];
@@ -365,7 +361,7 @@ abstract class Client
             }
             $host = wp_parse_url($url, PHP_URL_HOST);
         }
-        return trim($host);
+        return trim((string)$host);
     }
 
     /**

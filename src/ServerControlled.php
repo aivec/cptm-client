@@ -189,7 +189,7 @@ class ServerControlled extends Client
     public function updateOptionsWithPost() {
         parent::updateOptionsWithPost();
         if (isset($_POST[$this->providersUrlOverrideOptName])) {
-            $url = (string)$_POST[$this->providersUrlOverrideOptName];
+            $url = esc_url_raw(wp_unslash($_POST[$this->providersUrlOverrideOptName]));
             $this->setProvidersUrlOverride($url);
         }
     }
@@ -204,6 +204,9 @@ class ServerControlled extends Client
     public static function buildProvidersFromArray(array $providers) {
         $s = [];
         foreach ($providers as $identifier => $provider) {
+            if (!is_string($identifier)) {
+                continue;
+            }
             if (!empty($provider['productionEndpoint']) && is_array($provider['productionEndpoint'])) {
                 $prodEndpoint = $provider['productionEndpoint'];
                 if (!empty($prodEndpoint['siteurl']) && !empty($prodEndpoint['apiurl'])) {

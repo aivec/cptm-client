@@ -103,7 +103,7 @@ class SettingsPage
 
         ?>
         <div class="wrap">
-            <h1><?php echo $this->ptname . ' ' . __('Settings', 'cptmc'); ?></h1>
+            <h1><?php echo esc_html($this->ptname) . ' ' . esc_html__('Settings', 'cptmc'); ?></h1>
             <form method="post" action="options.php">
                 <?php settings_fields($this->page); ?>
                 <table class="form-table" role="presentation">
@@ -144,13 +144,13 @@ class SettingsPage
                             ?>
                             <label>
                                 <input
-                                    name="<?php echo $this->client->selectedProviderOptName; ?>"
+                                    name="<?php echo esc_attr($this->client->selectedProviderOptName); ?>"
                                     type="radio"
                                     id="cpt_provider_<?php echo esc_attr($this->client->getItemUniqueId() . $provider->getIdentifier()); ?>"
                                     value="<?php echo esc_attr($provider->getIdentifier()); ?>"
                                     <?php echo $selected === $provider->getIdentifier() ? 'checked' : ''; ?>
                                 />
-                                <?php echo $this->client->getProviderEndpoint($provider)->getDisplayText(); ?>
+                                <?php echo esc_html($this->client->getProviderEndpoint($provider)->getDisplayText()); ?>
                             </label>
                             <br />
                             <?php
@@ -181,15 +181,15 @@ class SettingsPage
         ?>
         <tr>
             <th scope="row">
-                <label for="<?php echo $optname; ?>">
+                <label for="<?php echo esc_attr($optname); ?>">
                     <?php esc_html_e('Testing Providers URL', 'cptmc'); ?>
                 </label>
             </th>
             <td>
                 <input
                     type="text"
-                    name="<?php echo $optname; ?>"
-                    id="<?php echo $optname; ?>"
+                    name="<?php echo esc_attr($optname); ?>"
+                    id="<?php echo esc_attr($optname); ?>"
                     aria-describedby="tagline-description-1"
                     value="<?php form_option($optname); ?>"
                     class="regular-text"
@@ -216,15 +216,15 @@ class SettingsPage
         ?>
         <tr>
             <th scope="row">
-                <label for="<?php echo $optname; ?>">
+                <label for="<?php echo esc_attr($optname); ?>">
                     <?php esc_html_e('Testing Update URL', 'cptmc'); ?>
                 </label>
             </th>
             <td>
                 <input
                     type="text"
-                    name="<?php echo $optname; ?>"
-                    id="<?php echo $optname; ?>"
+                    name="<?php echo esc_attr($optname); ?>"
+                    id="<?php echo esc_attr($optname); ?>"
                     aria-describedby="tagline-description-2"
                     value="<?php form_option($optname); ?>"
                     class="regular-text"
